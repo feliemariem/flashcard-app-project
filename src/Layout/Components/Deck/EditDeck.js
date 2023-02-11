@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams, useHistory } from "react-router-dom";
-import { readDeck, updateDeck } from "../utils/api/index";
+import { readDeck, updateDeck } from "../../../utils/api/index";
 
 function EditDeck() {
     const { deckId } = useParams();
@@ -26,8 +26,7 @@ function EditDeck() {
             };
         }
         fetchData();
-
-    }, []);
+    }, [deckId]);
 
     function handleChange({ target }) {
         setDeck({
@@ -50,14 +49,15 @@ function EditDeck() {
 
     return (
         <div>
-            <ol className = "breadcrumb">
-                <li className = "breadcrumb-item">
+            <ol className="breadcrumb">
+                <li className="breadcrumb-item">
                     <Link to="/">Home</Link>
                 </li>
-                <li className = "breadcrumb-item active">Edit Deck</li>
+                <li className="breadcrumb-item">
+                    <Link to={`/decks/${deckId}`}>{deck.name}</Link>
+                </li>
+                <li className="breadcrumb-item active">Edit Deck</li>
             </ol>
-
-
             <form onSubmit={handleSubmit}>
                 <h1>Edit Deck</h1>
                 <div className="form-group">
@@ -71,7 +71,6 @@ function EditDeck() {
                         value={deck.name}
                     />
                 </div>
-
                 <div className="form-group">
                     <label>Description</label>
                     <textarea
@@ -83,17 +82,18 @@ function EditDeck() {
                         value={deck.description}
                     />
                 </div>
-
-                <button className="btn btn-secondary mx-1" onClick={() => handleCancel()}>
+                <button
+                    className="btn btn-secondary mx-1"
+                    onClick={() => handleCancel()}
+                >
                     Cancel
                 </button>
-                
-                <button className="btn btn=primary mx-1" type="submit">
+                <button className="btn btn-primary mx-1" type="submit">
                     Submit
                 </button>
             </form>
         </div>
-    ); 
+    );
 }
 
 export default EditDeck;

@@ -1,87 +1,96 @@
-import React, { useState, useEffect } from "react";
-import { listDecks, deleteDeck } from "../utils/api/index";
-import { Link, useHistory } from "react-router-dom";
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useHistory } from 'react-router-dom';
+import { deleteDeck, listDecks } from '../utils/api/index';
+
 
 function Home() {
-    const history = useHistory();
+    const mountedRef = useRef(false);
     const [decks, setDecks] = useState([]);
-
+    const history = useHistory();
+  
     useEffect(() => {
-        async function fetchData() {
-            const abortController = new AbortController();
-            try {
-                const deckResponse = await listDecks(abortController.signal);
-                setDecks(deckResponse);
-            } catch (error) {
-                console.error("Something went wrong", error);
-            }
-            return () => {
-                abortController.abort();
-            };
-        }
-        fetchData();
+      mountedRef.current = true;
+      return () => {
+        mountedRef.current = false;
+      };
     }, []);
-
-    async function handleDelete(deck) {
-        if (
-            window.confirm(
-                `Delete this deck? You will not be able to recover it`
-            )
-        ) {
-            history.go(0);
-            return await deleteDeck(deck.id);
+  
+    useEffect(() => {
+      const abortController = new AbortController();
+      async function loadDecks() {
+        try {
+          const decks = await listDecks();
+          if (mountedRef.current) {
+            setDecks((_) => [...decks]);
+          }
+        } catch (error) {
+          if (error.name !== 'AbortError') {
+            throw error;
+          }
         }
-    }
-
-    return (
-        <div className="container">
-            <Link className="btn btn-secondary mb-2" to="/decks/new">
-                Create Deck
+      }
+      loadDecks();
+  
+      return () => abortController.abort();
+    }, []);
+  
+    const deleteHandler = async (deckId) => {
+      const confirmation = window.confirm(
+        'Delete this deck? You will not be able to recover it.'
+      );
+      if (confirmation) {
+        await deleteDeck(deckId);
+        history.go(0);
+      }
+    };
+  
+    const styledDecks = decks.map((deck) => (
+      <div
+        key={deck.id}
+        className='card'
+        style={{ width: '100%', marginTop: '1em' }}
+      >
+        <div className='card-body'>
+          <div className='d-flex justify-content-between'>
+            <h4 className='card-title'>{deck.name}</h4>
+            <p>{deck.cards.length} cards</p>
+          </div>
+          <p className='card-text text-secondary'>{deck.description}</p>
+          <div className='d-flex justify-content-between mt-4'>
+            <Link to={`/decks/${deck.id}`} className='card-link'>
+              <button
+                className='btn btn-secondary'
+                onClick={() => history.push(`/decks/${deck.id}`)}
+              >
+                <i className='fas fa-binoculars'></i> View
+              </button>
             </Link>
-            <div className="card-deck">
-                {decks.map((deck) => {
-                    return (
-                        <div
-                            className="card"
-                            style={{ width: "30rem" }}
-                            key={deck.id}
-                        >
-                            <div className="card-body">
-                                <div className="card-title">
-                                    {`${deck.name}`}
-                                </div>
-                                <div className="card-subtitle mb-2 text-muted">
-                                    {`${deck.cards.length} cards`}
-                                </div>
-                                <div className="card-text">
-                                    {`${deck.description}`}
-                                </div>
-                                <Link
-                                    className="btn btn-secondary mx-1"
-                                    to={`/decks/${deck.id}`}
-                                >
-                                    View
-                                </Link>
-                                <Link
-                                    className="btn btn-primary mx-1"
-                                    to={`/decks/${deck.id}/study`}
-                                >
-                                    Study
-                                </Link>
-                                <button
-                                    type="button"
-                                    className="btn btn-danger mx-1"
-                                    onClick={() => handleDelete(deck)}
-                                >
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
+            <Link to={`/decks/${deck.id}/study`} className='card-link'>
+              <button
+                className='btn btn-primary'
+                onClick={() => history.push(`/decks/${deck.id}/study`)}
+              >
+                <i className='fas fa-book'></i> Study
+              </button>
+            </Link>
+            <Link to='#' className='card-link'>
+              <button
+                className='btn btn-danger'
+                onClick={() => deleteHandler(deck.id)}
+              >
+                <i className='fas fa-trash'></i> Delete
+              </button>
+            </Link>
+          </div>
         </div>
+      </div>
+    ));
+  
+    return decks ? (
+      <React.Fragment>{styledDecks}</React.Fragment>
+    ) : (
+      <p>Loading...</p>
     );
-}
-
-export default Home;
+  }
+  
+  export default Home;

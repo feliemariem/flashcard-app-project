@@ -1,11 +1,8 @@
 import React from "react";
 import {useHistory, useRouteMatch, Link} from "react-router-dom";
-import {deleteCard} from "../utils/api/index";
+import {deleteCard} from "../../../utils/api/index";
 
-
-
-
-function Card({ cards = [] }) {
+function ViewCards({ cards = [] }) {
     const history = useHistory();
     const { url } = useRouteMatch();
   
@@ -56,4 +53,4 @@ function Card({ cards = [] }) {
     );
   }
   
-  export default Card;
+  export default ViewCards;
